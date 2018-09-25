@@ -46,23 +46,28 @@ Several functions are created to check the performance of different features vec
 def extract_features_with_letter_counting(query, attack):
     """
     Extract the features for a DNS query string counting all the letters in the string
+    in proportion with the total length of the query
     The features are:
-        - Count of alphanumeric characters (a: 1, b: 5, c: 2...)
-        - Number of non-alphanumeric characters (other: 3)
-        - Longest consecutive number in the string (longest_number: 2)
+        - Count of alphanumeric characters (a: 0.375, b: 0.25, c: 0.125...)
+        - Number of non-alphanumeric characters (other: 0.125)
+        - Longest consecutive number in the string (longest_number: 0.25)
     """
+    length = len(query)
     # Alphanumeric characters in query
     query_alphanumeric = list(filter(str.isalnum, query))
     # Non-alphanumeric characters in query
     query_non_alphanumeric = list(filter(lambda ch: not ch.isalnum(), query))
     # Create dictionary with the number of repetitions of the alphanumeric characters
     letters = collections.Counter(query_alphanumeric)
+    # The letters are counted in proportion with the length of the query
+    for letter in letters:
+        letters[letter] = letters[letter] / length
     if query_non_alphanumeric:
-        # Feature that measures the repetitions of other characters
-        letters['other'] = len(query_non_alphanumeric)
-    # Feature that measures the longest string of numbers that are together
+        # Feature that measures the repetitions of other characters in proportion with the total length
+        letters['other'] = len(query_non_alphanumeric) / length
+    # Feature that measures the longest string of numbers that are together in proportion with the total length
     longest_number_in_query = get_longest_string_number(query)
-    letters['longest_number'] = len(longest_number_in_query)
+    letters['longest_number'] = len(longest_number_in_query) / length
     letters['attack'] = attack
     return letters
 
