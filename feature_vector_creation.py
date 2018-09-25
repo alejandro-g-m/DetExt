@@ -72,19 +72,14 @@ def extract_features_reduced(query, attack):
     Extract the features for a DNS query string
     The features are:
         - Number of alphanumeric characters in proportion to the query's length (alphanumeric: 0.8)
-        - Number of non-alphanumeric characters in proportion to the query's length (non-alphanumeric: 0.2)
         - Longest consecutive number in the string in proportion to the query's length (longest_number: 0.1)
     """
     # Alphanumeric characters in query
     query_alphanumeric = list(filter(str.isalnum, query))
-    # Non-alphanumeric characters in query
-    query_non_alphanumeric = list(filter(lambda ch: not ch.isalnum(), query))
     # Create dictionary to hold the values
     letters = {}
     # Count the number of repetitions of the alphanumeric characters
     letters['alphanumeric'] = len(query_alphanumeric) / len(query)
-    # Count the number of repetitions of the non-alphanumeric characters
-    letters['other'] = len(query_non_alphanumeric) / len(query)
     # Feature that measures the longest string of numbers that are together
     longest_number_in_query = get_longest_string_number(query)
     letters['longest_number'] = len(longest_number_in_query) / len(query)
