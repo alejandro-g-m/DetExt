@@ -62,9 +62,8 @@ def extract_features_with_letter_counting(query, attack):
     # The letters are counted in proportion with the length of the query
     for letter in letters:
         letters[letter] = letters[letter] / length
-    if query_non_alphanumeric:
-        # Feature that measures the repetitions of other characters in proportion with the total length
-        letters['other'] = len(query_non_alphanumeric) / length
+    # The other characters in proportion with the total length
+    letters['other'] = len(query_non_alphanumeric) / length
     # Feature that measures the longest string of numbers that are together in proportion with the total length
     longest_number_in_query = get_longest_string_number(query)
     letters['longest_number'] = len(longest_number_in_query) / length
@@ -111,15 +110,16 @@ def extract_features_reduced(query, attack):
         - Number of alphanumeric characters in proportion to the query's length (alphanumeric: 0.8)
         - Longest consecutive number in the string in proportion to the query's length (longest_number: 0.1)
     """
+    length = len(query)
     # Alphanumeric characters in query
     query_alphanumeric = list(filter(str.isalnum, query))
     # Create dictionary to hold the values
     letters = {}
     # Count the number of repetitions of the alphanumeric characters
-    letters['alphanumeric'] = len(query_alphanumeric) / len(query)
+    letters['alphanumeric'] = len(query_alphanumeric) / length
     # Feature that measures the longest string of numbers that are together
     longest_number_in_query = get_longest_string_number(query)
-    letters['longest_number'] = len(longest_number_in_query) / len(query)
+    letters['longest_number'] = len(longest_number_in_query) / length
     letters['attack'] = attack
     return letters
 
