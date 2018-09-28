@@ -5,6 +5,9 @@ from pandas.plotting import scatter_matrix
 from sklearn.model_selection import StratifiedShuffleSplit, cross_val_predict
 from sklearn.linear_model import SGDClassifier, LogisticRegression
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
+from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier, export_graphviz
+from sklearn.neighbors import KNeighborsClassifier
 
 # dns_features = create_feature_vector_from_log_file('3JUL.log', extract_features_reduced)
 # print(dns_features[:100])
