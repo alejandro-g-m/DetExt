@@ -85,7 +85,7 @@ def extract_features_with_letters_and_numbers(query, attack):
     # Letters in query
     query_letters = list(filter(str.isalpha, query))
     # Numbers in query
-    query_numbers = list(filter(lambda ch: not ch.isalpha(), query))
+    query_numbers = list(filter(lambda ch: not ch.isalpha() and ch.isalnum(), query))
     # Non-alphanumeric characters in query
     query_non_alphanumeric = list(filter(lambda ch: not ch.isalnum(), query))
     # Create dictionary to hold the values
