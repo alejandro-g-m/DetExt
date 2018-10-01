@@ -2,6 +2,6 @@
 *.pem
 *.pyo
 __pycache__
-venv
+venv*
 .idea/
 .ipynb_checkpoints
