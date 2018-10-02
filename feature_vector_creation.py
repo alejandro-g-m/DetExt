@@ -27,10 +27,10 @@ class color:
 def get_longest_string_number(original_string):
     """
     Get the longest string of consecutive numbers in a string
-    For example in "a1b23c456de7f" it would return "456"
+    For example in 'a1b23c456de7f' it would return '456'
     """
     longest_number_string = ''
-    regex = r'([1-9]+)'
+    regex = r'([0-9]+)'
     matches = re.findall(regex, original_string)
     if matches:
         longest_number_string = max(matches, key=len)
