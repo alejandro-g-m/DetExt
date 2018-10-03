@@ -2,7 +2,7 @@ from feature_vector_creation import *
 import matplotlib.pyplot as plt
 import numpy as np
 from pandas.plotting import scatter_matrix
-from sklearn.model_selection import StratifiedShuffleSplit, cross_val_predict, RandomizedSearchCV, GridSearchCV
+from sklearn.model_selection import StratifiedShuffleSplit, cross_val_predict, RandomizedSearchCV, GridSearchCV, cross_validate
 from sklearn.linear_model import SGDClassifier, LogisticRegression
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score, precision_recall_curve
 from sklearn.svm import SVC
@@ -34,6 +34,32 @@ def plot_precision_recall_vs_threshold(precisions, recalls, thresholds):
     plt.xlabel("Threshold", fontsize=16)
     plt.legend(loc='upper left', fontsize=16)
     plt.ylim([0, 1])
+
+def cross_validate_models(models, features, labels, scoring, cv=5, n_jobs=-1):
+    """
+    Gets a list of models and the data to train them.
+    Returns the results of doing cross validation to all of them using the
+    scoring, cv and n_jobs passed as parameters.
+    """
+    results = []
+    for model in models:
+        cv_results = cross_validate(model, features, labels, scoring=scoring, cv=cv, n_jobs=n_jobs, return_train_score=True)
+        results.append(cv_results)
+    return results
+
+def get_cross_validate_scores(cv_results, names, scoring):
+    """
+    Gets a list of cross validation results and the name of the models that have been used.
+    Returns the scores of these models as given in scoring.
+    It assumes that all the scores in scoring were returned by the cross validation.
+    """
+    cross_validate_scores = []
+    for result, name in zip(cv_results, names):
+        scores = {}
+        for score in scoring:
+            scores[score] = np.mean(result['test_' + score])
+        cross_validate_scores.append((name, scores))
+    return cross_validate_scores
 
 def evaluate_model_with_precision_and_recall(model, X_test, y_test):
     """
