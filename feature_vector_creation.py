@@ -53,6 +53,8 @@ def extract_features_with_letter_counting(query, attack):
         - Longest consecutive number in the string (longest_number: 0.25)
     """
     length = len(query)
+    # Create dictionary to hold the values
+    letters = {}
     if length > 0:
         # Alphanumeric characters in query
         query_alphanumeric = list(filter(str.isalnum, query))
@@ -83,6 +85,8 @@ def extract_features_with_letters_and_numbers(query, attack):
         - Longest consecutive number in the string (longest_number: 0.1)
     """
     length = len(query)
+    # Create dictionary to hold the values
+    letters = {}
     if length > 0:
         # Letters in query
         query_letters = list(filter(str.isalpha, query))
@@ -90,8 +94,6 @@ def extract_features_with_letters_and_numbers(query, attack):
         query_numbers = list(filter(lambda ch: not ch.isalpha() and ch.isalnum(), query))
         # Non-alphanumeric characters in query
         query_non_alphanumeric = list(filter(lambda ch: not ch.isalnum(), query))
-        # Create dictionary to hold the values
-        letters = {}
         # Count the number of letters
         letters['letters'] = len(query_letters) / length
         # Count the numbers
@@ -113,11 +115,11 @@ def extract_features_reduced(query, attack):
         - Longest consecutive number in the string in proportion to the query's length (longest_number: 0.1)
     """
     length = len(query)
+    # Create dictionary to hold the values
+    letters = {}
     if length > 0:
         # Alphanumeric characters in query
         query_alphanumeric = list(filter(str.isalnum, query))
-        # Create dictionary to hold the values
-        letters = {}
         # Count the number of repetitions of the alphanumeric characters
         letters['alphanumeric'] = len(query_alphanumeric) / length
         # Feature that measures the longest string of numbers that are together
