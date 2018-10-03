@@ -70,7 +70,7 @@ def extract_features_with_letter_counting(query, attack):
         # Feature that measures the longest string of numbers that are together in proportion with the total length
         longest_number_in_query = get_longest_string_number(query)
         letters['longest_number'] = len(longest_number_in_query) / length
-        letters['attack'] = attack
+    letters['attack'] = attack
     return letters
 
 
