@@ -16,7 +16,7 @@ from sklearn.ensemble import VotingClassifier, RandomForestClassifier, ExtraTree
 def split_train_and_test_sets(data, target_variable):
     """
     Splits a given feature vector in a 80% train set and 20% test set.
-    Uses Stratified Sampling with the variable passed in "target_variable"
+    Uses Stratified Sampling with the variable passed in "target_variable".
     """
     split = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=13)
     for train_index, test_index in split.split(data, data[target_variable]):
@@ -25,6 +25,10 @@ def split_train_and_test_sets(data, target_variable):
     return train_set, test_set
 
 def plot_precision_recall_vs_threshold(precisions, recalls, thresholds):
+    """
+    Plots the precision and recall curves vs threshold.
+    Used to analyse the SGD classifiers.
+    """
     plt.plot(thresholds, precisions[:-1], 'b--', label="Precision", linewidth=2)
     plt.plot(thresholds, recalls[:-1], 'g-', label="Recall", linewidth=2)
     plt.xlabel("Threshold", fontsize=16)
@@ -32,6 +36,11 @@ def plot_precision_recall_vs_threshold(precisions, recalls, thresholds):
     plt.ylim([0, 1])
 
 def evaluate_model_with_precision_and_recall(model, X_test, y_test):
+    """
+    Evaluates the predictions of a model for the data X_test.
+    Returns the precision, recall and F1 scores after comparing the predictions
+    to the real values contained in y_test.
+    """
     final_predictions = model.predict(X_test)
     final_precision = precision_score(y_test, final_predictions)
     final_recall = recall_score(y_test, final_predictions)
