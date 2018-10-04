@@ -35,22 +35,22 @@ def plot_precision_recall_vs_threshold(precisions, recalls, thresholds):
     plt.legend(loc='upper left', fontsize=16)
     plt.ylim([0, 1])
 
-def cross_validate_models(models, features, labels, scoring, cv=5, n_jobs=-1):
+def cross_validate_models(models, features, labels, scoring, cv=5, n_jobs=-1, return_train_score=False):
     """
     Gets a list of models and the data to train them.
     Returns the results of doing cross validation to all of them using the
-    scoring, cv and n_jobs passed as parameters.
+    "scoring", "cv" and "n_jobs" passed as parameters.
     """
     results = []
     for model in models:
-        cv_results = cross_validate(model, features, labels, scoring=scoring, cv=cv, n_jobs=n_jobs, return_train_score=True)
+        cv_results = cross_validate(model, features, labels, scoring=scoring, cv=cv, n_jobs=n_jobs, return_train_score=return_train_score)
         results.append(cv_results)
     return results
 
 def get_cross_validate_scores(cv_results, names, scoring):
     """
     Gets a list of cross validation results and the name of the models that have been used.
-    Returns the scores of these models as given in scoring.
+    Returns the test scores of these models as given in "scoring".
     It assumes that all the scores in scoring were returned by the cross validation.
     """
     cross_validate_scores = []
@@ -63,9 +63,9 @@ def get_cross_validate_scores(cv_results, names, scoring):
 
 def evaluate_model_with_precision_and_recall(model, X_test, y_test):
     """
-    Evaluates the predictions of a model for the data X_test.
+    Evaluates the predictions of a "model" for the data "X_test".
     Returns the precision, recall and F1 scores after comparing the predictions
-    to the real values contained in y_test.
+    to the real values contained in "y_test".
     """
     final_predictions = model.predict(X_test)
     final_precision = precision_score(y_test, final_predictions)
