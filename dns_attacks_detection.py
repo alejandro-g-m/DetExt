@@ -10,6 +10,7 @@ from sklearn.tree import DecisionTreeClassifier, export_graphviz
 from sklearn.neighbors import KNeighborsClassifier
 from scipy.stats import randint
 from sklearn.ensemble import VotingClassifier, RandomForestClassifier, ExtraTreesClassifier
+from sklearn.externals import joblib
 
 # dns_features = create_feature_vector_from_log_file('3JUL.log', extract_features_with_letters_and_numbers)
 # print(dns_features[:100])
