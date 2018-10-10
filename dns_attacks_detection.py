@@ -39,6 +39,9 @@ def plot_precision_recall_vs_threshold(precisions, recalls, thresholds):
     """
     Plots the precision and recall curves vs threshold.
     Used to analyse the SGD classifiers.
+    It expects the "precisions" and "recalls" that are returned from the function
+    "precision_recall_curve", so it removes the last value, as there is no
+    corresponding threshold.
     """
     plt.plot(thresholds, precisions[:-1], 'b--', label="Precision", linewidth=2)
     plt.plot(thresholds, recalls[:-1], 'g-', label="Recall", linewidth=2)
