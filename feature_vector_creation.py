@@ -38,8 +38,8 @@ def get_longest_string_number(original_string):
 
 
 """
-Functions to create features vectors. Each function creates a different type of vector.
-Several functions are created to check the performance of different features vectors.
+Functions to create feature vectors. Each function creates a different type of vector.
+Several functions are created to check the performance of different feature vectors.
 """
 
 
@@ -138,7 +138,7 @@ def create_feature_vector_from_log_file(infile, FV_function):
     """
     Open log file with DNS queries and create feature vector
     infile: log file
-    FV_function: chosen function to create features vector
+    FV_function: chosen function to create feature vector
     """
     outfile = "FV_" + infile
 
@@ -146,15 +146,16 @@ def create_feature_vector_from_log_file(infile, FV_function):
 
     with open(infile) as inf, open(outfile, 'w') as outf:
         for row in csv.reader(inf, delimiter='\t'):
-            # Parse the IP and query from file
-            IP = row[4].strip()
-            query = row[9].split('.')[0]
-            # Determine the attack tag and extract features for query
-            attack = 1 if IP == '1.1.1.1' else 0
-            features = FV_function(query, attack)
-            outf.write("%s - %s | Features: %s\n" % (query, IP, features))
-            # Append to features list
-            feature_dictionary_list.append(features)
+            if row and row[0][0] != '#':
+                # Parse the IP and query from file
+                IP = row[4].strip()
+                query = row[9].split('.')[0]
+                # Determine the attack tag and extract features for query
+                attack = 1 if IP == '1.1.1.1' else 0
+                features = FV_function(query, attack)
+                outf.write("%s - %s | Features: %s\n" % (query, IP, features))
+                # Append to features list
+                feature_dictionary_list.append(features)
         # Create DataFrame from dictionary
         df = pd.DataFrame(feature_dictionary_list).fillna(0)
 
