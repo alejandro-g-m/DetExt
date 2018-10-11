@@ -1,3 +1,5 @@
+![DNS Logo](https://png.pngtree.com/svg/20170904/safety_dns_1214948.png)
+
 # DetExt
 > Detection of malicious data exfiltration over DNS using Machine Learning techniques
 
