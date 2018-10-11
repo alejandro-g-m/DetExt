@@ -1,4 +1,6 @@
-<p align="center">![DNS Logo](https://hide.me/resources/260/images/ico_dns_securedns.png)</p>
+<p align="center">
+  <img src="https://hide.me/resources/260/images/ico_dns_securedns.png" alt="DetExt icon"/>
+</p>
 
 # DetExt
 > Detection of malicious data exfiltration over DNS using Machine Learning techniques
