@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://hide.me/resources/260/images/ico_dns_securedns.png" alt="DetExt icon"/>
+  <img src="./images/dns_icon.png" alt="DetExt icon"/>
 </p>
 
 # DetExt
