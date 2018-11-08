@@ -4,6 +4,7 @@ import collections
 import string
 import re
 import pandas as pd
+from string import ascii_lowercase as al, digits as dg
 
 
 """
@@ -53,23 +54,22 @@ def extract_features_with_letter_counting(query, attack):
         - Longest consecutive number in the string (longest_number: 0.25)
     """
     length = len(query)
-    # Create dictionary to hold the values
-    letters = {}
     if length > 0:
         # Alphanumeric characters in query
         query_alphanumeric = list(filter(str.isalnum, query))
         # Non-alphanumeric characters in query
         query_non_alphanumeric = list(filter(lambda ch: not ch.isalnum(), query))
-        # Create dictionary with the number of repetitions of the alphanumeric characters
-        letters = collections.Counter(query_alphanumeric)
-        # The letters are counted in proportion with the length of the query
-        for letter in letters:
-            letters[letter] = letters[letter] / length
+        # Create dictionary with the number of repetitions of the alphanumeric
+        # characters in proportion with the length of the query
+        letters = {x:(query.count(x) / length) for x in al+dg}
         # The other characters in proportion with the total length
         letters['other'] = len(query_non_alphanumeric) / length
         # Feature that measures the longest string of numbers that are together in proportion with the total length
         longest_number_in_query = get_longest_string_number(query)
         letters['longest_number'] = len(longest_number_in_query) / length
+    else:
+        # Create emtpy dictionary for empty string
+        letters = {x:0 for x in al+dg}
     letters['attack'] = attack
     return letters
 
@@ -86,7 +86,7 @@ def extract_features_with_letters_and_numbers(query, attack):
     """
     length = len(query)
     # Create dictionary to hold the values
-    letters = {}
+    letters = {'letters': 0, 'numbers': 0, 'other': 0, 'longest_number': 0}
     if length > 0:
         # Letters in query
         query_letters = list(filter(str.isalpha, query))
@@ -116,7 +116,7 @@ def extract_features_reduced(query, attack):
     """
     length = len(query)
     # Create dictionary to hold the values
-    letters = {}
+    letters = {'alphanumeric': 0, 'longest_number': 0}
     if length > 0:
         # Alphanumeric characters in query
         query_alphanumeric = list(filter(str.isalnum, query))

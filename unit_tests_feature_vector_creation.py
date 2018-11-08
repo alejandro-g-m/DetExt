@@ -2,6 +2,7 @@ import unittest
 import numpy as np
 import os
 from feature_vector_creation import *
+from string import ascii_lowercase as al, digits as dg
 
 class TestFeatureVectorCreation(unittest.TestCase):
 
@@ -33,59 +34,68 @@ class TestFeatureVectorCreation(unittest.TestCase):
         The tests consist in checking that the returned dictionary has the same
         keys as expected and that the values of the keys are correct.
         """
+        empty = {x:0 for x in al + dg}
         # Test a simple string of letters
-        desired = {'a':0.333, 'b':0.333, 'c':0.333, 'other':0, 'longest_number':0, 'attack':0}
+        desired = empty.copy()
+        desired.update({'a':0.333, 'b':0.333, 'c':0.333, 'other':0, 'longest_number':0, 'attack':0})
         test = extract_features_with_letter_counting('abc', 0)
         self.assertCountEqual(desired.keys(), test.keys())
         for key, value in test.items():
             np.testing.assert_almost_equal(value, desired[key], decimal=3)
         # Test a simple string of numbers
-        desired = {'1':1, 'other':0, 'longest_number':1, 'attack':0}
+        desired = empty.copy()
+        desired.update({'1':1, 'other':0, 'longest_number':1, 'attack':0})
         test = extract_features_with_letter_counting('111', 0)
         self.assertCountEqual(desired.keys(), test.keys())
         for key, value in test.items():
             np.testing.assert_almost_equal(value, desired[key], decimal=3)
         # Test a simple string of "other" characters
-        desired = {'other':1, 'longest_number':0, 'attack':0}
+        desired = empty.copy()
+        desired.update({'other':1, 'longest_number':0, 'attack':0})
         test = extract_features_with_letter_counting('_*-+¿.(%#', 0)
         self.assertCountEqual(desired.keys(), test.keys())
         for key, value in test.items():
             np.testing.assert_almost_equal(value, desired[key], decimal=3)
-        # Test a capital lettter, number and "other"
-        desired = {'Z':0.333, '0':0.333, 'other':0.333, 'longest_number':0.333, 'attack':1}
-        test = extract_features_with_letter_counting('Z0*', 1)
+        # Test number and "other"
+        desired = empty.copy()
+        desired.update({'z':0.333, '0':0.333, 'other':0.333, 'longest_number':0.333, 'attack':1})
+        test = extract_features_with_letter_counting('z0*', 1)
         self.assertCountEqual(desired.keys(), test.keys())
         for key, value in test.items():
             np.testing.assert_almost_equal(value, desired[key], decimal=3)
         # Test all letters
-        desired = {'a':0.0384, 'b':0.0384, 'c':0.0384, 'd':0.0384, 'e':0.0384,
+        desired = empty.copy()
+        desired.update({'a':0.0384, 'b':0.0384, 'c':0.0384, 'd':0.0384, 'e':0.0384,
         'f':0.0384, 'g':0.0384, 'h':0.0384, 'i':0.0384, 'j':0.0384, 'k':0.0384,
         'l':0.0384, 'm':0.0384, 'n':0.0384, 'o':0.0384, 'p':0.0384, 'q':0.0384,
         'r':0.0384, 's':0.0384, 't':0.0384, 'u':0.0384, 'v':0.0384, 'w':0.0384,
-        'x':0.0384, 'y':0.0384, 'z':0.0384, 'other':0, 'longest_number':0, 'attack':1}
+        'x':0.0384, 'y':0.0384, 'z':0.0384, 'other':0, 'longest_number':0, 'attack':1})
         test = extract_features_with_letter_counting('abcdefghijklmnopqrstuvwxyz', 1)
         self.assertCountEqual(desired.keys(), test.keys())
         for key, value in test.items():
             np.testing.assert_almost_equal(value, desired[key], decimal=3)
         # Test all numbers
-        desired = {'0':0.1, '1':0.1, '2':0.1, '3':0.1, '4':0.1, '5':0.1, '6':0.1,
-        '7':0.1, '8':0.1, '9':0.1, 'other':0, 'longest_number':1, 'attack':1}
+        desired = empty.copy()
+        desired.update({'0':0.1, '1':0.1, '2':0.1, '3':0.1, '4':0.1, '5':0.1, '6':0.1,
+        '7':0.1, '8':0.1, '9':0.1, 'other':0, 'longest_number':1, 'attack':1})
         test = extract_features_with_letter_counting('3498501267', 1)
         self.assertCountEqual(desired.keys(), test.keys())
         for key, value in test.items():
             np.testing.assert_almost_equal(value, desired[key], decimal=3)
         # Test empty string
-        desired = {'attack':1}
+        desired = empty.copy()
+        desired.update({'attack':1})
         test = extract_features_with_letter_counting('', 1)
         self.assertCountEqual(desired.keys(), test.keys())
         for key, value in test.items():
             np.testing.assert_almost_equal(value, desired[key], decimal=3)
         # Test long combined string
-        desired = {'a':0.0454, 'b':0.0454, 'c':0.0454, 'd':0.0454, 'e':0.0227,
+        desired = empty.copy()
+        desired.update({'a':0.0454, 'b':0.0454, 'c':0.0454, 'd':0.0454, 'e':0.0227,
         'f':0.0227, 'g':0.0454, 'i':0.0227, 'l':0.0227, 'r':0.0227, 't':0.0227,
         'u':0.0227, '0':0.0909, '1':0.0454, '2':0.0454, '3':0.0454, '4':0.0454,
         '5':0.0454, '6':0.0454, '7':0.0454, '8':0.0681, '9':0.0227, 'other':0.1136,
-        'longest_number':0.2272, 'attack':1}
+        'longest_number':0.2272, 'attack':1})
         test = extract_features_with_letter_counting('_ab*c/defg1234567890ab1c2¿d3g4-r5t6u7i88l000', 1)
         self.assertCountEqual(desired.keys(), test.keys())
         for key, value in test.items():
@@ -134,7 +144,7 @@ class TestFeatureVectorCreation(unittest.TestCase):
         for key, value in test.items():
             np.testing.assert_almost_equal(value, desired[key], decimal=3)
         # Test empty string
-        desired = {'attack':1}
+        desired = {'letters':0, 'numbers':0, 'other':0, 'longest_number':0, 'attack':1}
         test = extract_features_with_letters_and_numbers('', 1)
         self.assertCountEqual(desired.keys(), test.keys())
         for key, value in test.items():
@@ -189,7 +199,7 @@ class TestFeatureVectorCreation(unittest.TestCase):
         for key, value in test.items():
             np.testing.assert_almost_equal(value, desired[key], decimal=3)
         # Test empty string
-        desired = {'attack':1}
+        desired = {'alphanumeric':0, 'longest_number':0, 'attack':1}
         test = extract_features_reduced('', 1)
         self.assertCountEqual(desired.keys(), test.keys())
         for key, value in test.items():
