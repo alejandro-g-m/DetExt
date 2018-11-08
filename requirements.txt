@@ -39,6 +39,7 @@ python-dateutil==2.7.3
 pytz==2018.5
 pyzmq==17.1.2
 qtconsole==4.4.1
+scapy==2.4.0
 scikit-learn==0.20.0
 scipy==1.1.0
 Send2Trash==1.5.0
