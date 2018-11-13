@@ -2,14 +2,19 @@ import sys
 import csv
 import collections
 import string
+import math
 import re
 import pandas as pd
-from string import ascii_lowercase as al, digits as dg
+import enchant
+from string import ascii_lowercase as al, ascii_uppercase as au, digits as dg, punctuation as pt
 
 
 """
 Helper Functions and Classes
 """
+
+
+url_characters = al + au + dg + "$-_+!*'()," # Common characters in an URL
 
 
 class color:
@@ -25,7 +30,34 @@ class color:
    END = '\033[0m'
 
 
-def get_longest_string_number(original_string):
+def get_char_ratio(original_string):
+    """
+    Get the ratio of characters in a string
+    """
+    if len(original_string) > 0:
+        return len(list(filter(str.isalpha, original_string))) / len(original_string)
+    return 0
+
+
+def get_digit_ratio(original_string):
+    """
+    Get the ratio of digits in a string
+    """
+    if len(original_string) > 0:
+        return len(list(filter(lambda ch: not ch.isalpha() and ch.isalnum(), original_string))) / len(original_string)
+    return 0
+
+
+def get_symbols_ratio(original_string):
+    """
+    Get the ratio of symbols in a string
+    """
+    if len(original_string) > 0:
+        return len(list(filter(lambda ch: not ch.isalnum(), original_string))) / len(original_string)
+    return 0
+
+
+def get_longest_number_string(original_string):
     """
     Get the longest string of consecutive numbers in a string
     For example in 'a1b23c456de7f' it would return '456'
@@ -36,6 +68,104 @@ def get_longest_string_number(original_string):
     if matches:
         longest_number_string = max(matches, key=len)
     return longest_number_string
+
+
+def get_longest_number_string_ratio(original_string):
+    """
+    Wrapper for get_longest_number_string
+    It returns the ratio compared to the total length
+    """
+    if len(original_string) > 0:
+        return len(get_longest_number_string(original_string)) / len(original_string)
+    return 0
+
+
+def get_longest_char_string(original_string):
+    """
+    Get the longest string of consecutive chars in a string
+    For example in 'a1b23c456de7f' it would return 'de'
+    """
+    longest_char_string = ''
+    regex = r'([a-zA-Z]+)'
+    matches = re.findall(regex, original_string)
+    if matches:
+        longest_char_string = max(matches, key=len)
+    return longest_char_string
+
+
+def get_longest_char_string_ratio(original_string):
+    """
+    Wrapper for get_longest_char_string
+    It returns the ratio compared to the total length
+    """
+    if len(original_string) > 0:
+        return len(get_longest_char_string(original_string)) / len(original_string)
+    return 0
+
+
+def get_all_substrings(original_string):
+    """
+    Get all the contiguous substrings in a string
+    """
+    substrings = []
+    for i in range(len(original_string)):
+        for j in range(i, len(original_string)):
+            substrings.append(original_string[i:j+1])
+    return substrings
+
+
+def has_digits_or_punctuation(original_string):
+    """
+    Check if a string has any digit or symbols
+    """
+    return any(char.isdigit() or char in pt for char in original_string)
+
+
+def get_longest_meaningful_word(original_string):
+    """
+    Get the longest substring that belongs to the English dictionary
+    has_digits_or_punctuation is needed because enchant understands digit
+    strings and some symbols as valid words
+    """
+    dictionary = enchant.Dict('en_US')
+    substrings = set(get_all_substrings(original_string))
+    longest_meaningful_word = ''
+    for substring in substrings:
+        if (not has_digits_or_punctuation(substring) and
+        dictionary.check(substring.lower()) and
+        len(substring) > len(longest_meaningful_word)):
+            longest_meaningful_word = substring
+    return longest_meaningful_word
+
+
+def get_longest_meaningful_word_ratio(original_string):
+    """
+    Wrapper for get_longest_meaningful_word
+    It returns the ratio compared to the total length
+    """
+    if len(original_string) > 0:
+        return len(get_longest_meaningful_word(original_string)) / len(original_string)
+    return 0
+
+
+# Iterator to calculate entropies
+def range_url(): return (ord(c) for c in url_characters)
+
+
+def metric_entropy(data, iterator=range_url):
+    """
+    Returns the metric entropy (Shannon's entropy divided by string length)
+    for some data given a set of possible data elements
+    Based on: http://pythonfiddle.com/shannon-entropy-calculation/
+    """
+    if not data:
+        return 0
+    entropy = 0
+    for x in iterator():
+        p_x = float(data.count(chr(x))) / len(data)
+        if p_x > 0:
+            entropy += - p_x * math.log(p_x, 2)
+    return entropy / len(data)
 
 
 """
@@ -55,21 +185,16 @@ def extract_features_with_letter_counting(query, attack):
     """
     length = len(query)
     if length > 0:
-        # Alphanumeric characters in query
-        query_alphanumeric = list(filter(str.isalnum, query))
-        # Non-alphanumeric characters in query
-        query_non_alphanumeric = list(filter(lambda ch: not ch.isalnum(), query))
         # Create dictionary with the number of repetitions of the alphanumeric
         # characters in proportion with the length of the query
         letters = {x:(query.count(x) / length) for x in al+dg}
-        # The other characters in proportion with the total length
-        letters['other'] = len(query_non_alphanumeric) / length
-        # Feature that measures the longest string of numbers that are together in proportion with the total length
-        longest_number_in_query = get_longest_string_number(query)
-        letters['longest_number'] = len(longest_number_in_query) / length
     else:
         # Create emtpy dictionary for empty string
         letters = {x:0 for x in al+dg}
+    # The other characters in proportion with the total length
+    letters['other'] = get_symbols_ratio(query)
+    # Feature that measures the longest string of numbers that are together in proportion with the total length
+    letters['longest_number'] = get_longest_number_string_ratio(query)
     letters['attack'] = attack
     return letters
 
@@ -84,25 +209,15 @@ def extract_features_with_letters_and_numbers(query, attack):
         - Number of non-alphanumeric characters (other: 0.1)
         - Longest consecutive number in the string (longest_number: 0.1)
     """
-    length = len(query)
-    # Create dictionary to hold the values
-    letters = {'letters': 0, 'numbers': 0, 'other': 0, 'longest_number': 0}
-    if length > 0:
-        # Letters in query
-        query_letters = list(filter(str.isalpha, query))
-        # Numbers in query
-        query_numbers = list(filter(lambda ch: not ch.isalpha() and ch.isalnum(), query))
-        # Non-alphanumeric characters in query
-        query_non_alphanumeric = list(filter(lambda ch: not ch.isalnum(), query))
-        # Count the number of letters
-        letters['letters'] = len(query_letters) / length
-        # Count the numbers
-        letters['numbers'] = len(query_numbers) / length
-        # Count the other characters
-        letters['other'] = len(query_non_alphanumeric) / length
-        # Count the longest number
-        longest_number_in_query = get_longest_string_number(query)
-        letters['longest_number'] = len(longest_number_in_query) / length
+    letters = {}
+    # Count the number of letters
+    letters['letters'] = get_char_ratio(query)
+    # Count the numbers
+    letters['numbers'] = get_digit_ratio(query)
+    # Count the other characters
+    letters['other'] = get_symbols_ratio(query)
+    # Count the longest number
+    letters['longest_number'] = get_longest_number_string_ratio(query)
     letters['attack'] = attack
     return letters
 
@@ -123,8 +238,31 @@ def extract_features_reduced(query, attack):
         # Count the number of repetitions of the alphanumeric characters
         letters['alphanumeric'] = len(query_alphanumeric) / length
         # Feature that measures the longest string of numbers that are together
-        longest_number_in_query = get_longest_string_number(query)
-        letters['longest_number'] = len(longest_number_in_query) / length
+        letters['longest_number'] = get_longest_number_string_ratio(query)
+    letters['attack'] = attack
+    return letters
+
+
+def extract_features_entropy_and_ratios(query, attack):
+    """
+    Extract the features for a DNS query string
+    The features are:
+        - Char ratio
+        - Digit ratio
+        - Symbol ratio
+        - Longest char string
+        - Longest digit string
+        - Entropy
+        - Longest meaningful word
+    """
+    letters = {}
+    letters['chars'] = get_char_ratio(query)
+    letters['digits'] = get_digit_ratio(query)
+    letters['symbols'] = get_symbols_ratio(query)
+    letters['longest_chars'] = get_longest_char_string_ratio(query)
+    letters['longest_digits'] = get_longest_number_string_ratio(query)
+    letters['entropy'] = metric_entropy(query)
+    letters['longest_meaningful'] = get_longest_meaningful_word_ratio(query)
     letters['attack'] = attack
     return letters
 
