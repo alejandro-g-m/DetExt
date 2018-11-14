@@ -1,9 +1,27 @@
 import unittest
-from dns_attacks_detection import *
 from sklearn.datasets import make_classification
+from dns_attacks_detection import *
 
 
 class TestPlotting(unittest.TestCase):
+
+    @staticmethod
+    def is_point_within_polygon(point_x, point_y, vert_x, vert_y):
+        """
+        Helper function that calculates if a point is inside a poligon.
+        Used to test if the contours are drawn properly.
+        Taken from: https://stackoverflow.com/questions/217578/how-can-i-determine-whether-a-2d-point-is-within-a-polygon
+        """
+        n_vert = len(vert_x)
+        result = False
+        i = 0
+        j = n_vert-1
+        while i < n_vert:
+            if ((vert_y[i]>point_y) != (vert_y[j]>point_y)) and (point_x < (vert_x[j]-vert_x[i]) * (point_y-vert_y[i]) / (vert_y[j]-vert_y[i]) + vert_x[i]):
+                result = not result
+            j = i
+            i += 1
+        return result
 
     def setUp(self):
         self.X, self.y = make_classification(n_samples=10, n_features=2, n_redundant=0, n_informative=2, random_state=13, n_clusters_per_class=1)
@@ -103,32 +121,19 @@ class TestPlotting(unittest.TestCase):
         svm_clf_poly.fit(self.X, self.y)
         x_axes = np.array([-2.5, 1.2])
         y_axes = np.array([-0.1, 2])
-
         plot_predictions_for_SVC(svm_clf_poly, np.concatenate((x_axes, y_axes)))
         y_pred = svm_clf_poly.predict(self.X)
-        y_decision = svm_clf_poly.decision_function(self.X)
-        # Test if the decisions are displayed correctly
+        # Test if the predictions are displayed correctly
         contour_0 = self.axes.collections[0].get_paths()
-        max_vertex_x = contour_0[0].vertices[:,0].max()
-        min_vertex_x = contour_0[0].vertices[:,0].min()
-        max_vertex_y = contour_0[0].vertices[:,1].max()
-        min_vertex_y = contour_0[0].vertices[:,1].min()
+        vertices_x = contour_0[0].vertices[:,0]
+        vertices_y = contour_0[0].vertices[:,1]
         for X, prediction in zip(self.X, y_pred):
             if prediction == 1:
-                import pdb; pdb.set_trace()
                 # If it is predicted as an attack it should be out of the contour
-                self.assertTrue(X[0] <= min_vertex_x or X[0] >= max_vertex_x
-                or X[1] <= min_vertex_y or X[1] >= max_vertex_y)
+                self.assertFalse(self.is_point_within_polygon(X[0], X[1], vertices_x, vertices_y))
             else:
                 # If it is predicted as a no attack it should be in the contour
-                self.assertTrue(X[0] >= min_vertex_x and X[0] <= max_vertex_x
-                and X[1] >= min_vertex_y and X[1] <= max_vertex_y)
-
-    def test_plot_predictions_for_KNN(self):
-        pass
-
-    def tearDown(self):
-        pass
+                self.assertTrue(self.is_point_within_polygon(X[0], X[1], vertices_x, vertices_y))
 
 
 class TestDataPreparation(unittest.TestCase):
