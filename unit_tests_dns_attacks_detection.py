@@ -17,14 +17,16 @@ class TestPlotting(unittest.TestCase):
         i = 0
         j = n_vert-1
         while i < n_vert:
-            if ((vert_y[i]>point_y) != (vert_y[j]>point_y)) and (point_x < (vert_x[j]-vert_x[i]) * (point_y-vert_y[i]) / (vert_y[j]-vert_y[i]) + vert_x[i]):
+            if (((vert_y[i]>point_y) != (vert_y[j]>point_y)) and
+            (point_x < (vert_x[j]-vert_x[i]) * (point_y-vert_y[i]) / (vert_y[j]-vert_y[i]) + vert_x[i])):
                 result = not result
             j = i
             i += 1
         return result
 
     def setUp(self):
-        self.X, self.y = make_classification(n_samples=10, n_features=2, n_redundant=0, n_informative=2, random_state=13, n_clusters_per_class=1)
+        self.X, self.y = make_classification(n_samples=10, n_features=2,
+        n_redundant=0, n_informative=2, random_state=13, n_clusters_per_class=1)
         self.figure, self.axes = plt.subplots()
 
     def test_plot_dataset(self):
@@ -117,7 +119,8 @@ class TestPlotting(unittest.TestCase):
         np.testing.assert_array_equal(desired_boundary_line, boundary_line)
 
     def test_plot_predictions_for_SVC(self):
-        svm_clf_poly = SVC(kernel='poly', random_state=13, gamma='auto', degree=3, coef0=1, C=5)
+        svm_clf_poly = SVC(kernel='poly', random_state=13, gamma='auto',
+        degree=3, coef0=1, C=5)
         svm_clf_poly.fit(self.X, self.y)
         x_axes = np.array([-2.5, 1.2])
         y_axes = np.array([-0.1, 2])
@@ -130,28 +133,149 @@ class TestPlotting(unittest.TestCase):
         for X, prediction in zip(self.X, y_pred):
             if prediction == 1:
                 # If it is predicted as an attack it should be out of the contour
-                self.assertFalse(self.is_point_within_polygon(X[0], X[1], vertices_x, vertices_y))
+                self.assertFalse(
+                self.is_point_within_polygon(X[0], X[1], vertices_x, vertices_y))
             else:
                 # If it is predicted as a no attack it should be in the contour
-                self.assertTrue(self.is_point_within_polygon(X[0], X[1], vertices_x, vertices_y))
+                self.assertTrue(
+                self.is_point_within_polygon(X[0], X[1], vertices_x, vertices_y))
 
 
 class TestDataPreparation(unittest.TestCase):
 
+    def setUp(self):
+        self.X, self.y = make_classification(
+        n_samples=1000, n_features=5, n_redundant=0, n_informative=2,
+        random_state=13, n_clusters_per_class=1)
+        self.df = pd.DataFrame(np.concatenate((self.X, np.reshape(self.y, (-1,1))), axis=1))
+        self.target = 5
+
     def test_split_train_and_test_sets(self):
-        pass
+        """
+        The purpose of the test is to find that the train and test sets have
+        similar proportions regarding the target variable and that there
+        sizes of both sets are correct.
+        """
+        # Test dataframe
+        train_set, test_set = split_train_and_test_sets(self.df, self.target)
+        train_prop = train_set[self.target].value_counts() / len(train_set)
+        test_prop = test_set[self.target].value_counts() / len(test_set)
+        # Test similar proportions of each target variable
+        np.testing.assert_almost_equal(train_prop[0], test_prop[0], decimal=2)
+        np.testing.assert_almost_equal(train_prop[1], test_prop[1], decimal=2)
+        # Test that sizes of train and test sets are the correct ones
+        np.testing.assert_almost_equal(
+        len(train_set) / (len(train_set) + len(test_set)), 0.8, decimal=2)
+        np.testing.assert_almost_equal(
+        len(test_set) / (len(train_set) + len(test_set)), 0.2, decimal=2)
+
+        # Test dataframe with changed sizes
+        train_set, test_set = split_train_and_test_sets(self.df, self.target, 0.5)
+        train_prop = train_set[self.target].value_counts() / len(train_set)
+        test_prop = test_set[self.target].value_counts() / len(test_set)
+        # Test similar proportions of each target variable
+        np.testing.assert_almost_equal(train_prop[0], test_prop[0], decimal=2)
+        np.testing.assert_almost_equal(train_prop[1], test_prop[1], decimal=2)
+        # Test that sizes of train and test sets are the correct ones
+        np.testing.assert_almost_equal(
+        len(train_set) / (len(train_set) + len(test_set)), 0.5, decimal=2)
+        np.testing.assert_almost_equal(
+        len(test_set) / (len(train_set) + len(test_set)), 0.5, decimal=2)
 
 
 class TestModelEvaluation(unittest.TestCase):
 
+    def setUp(self):
+        self.X, self.y = make_classification(
+        n_samples=1000, n_features=5, n_redundant=0, n_informative=2,
+        random_state=13, n_clusters_per_class=1)
+        sgd_clf = SGDClassifier(max_iter=5, random_state=13)
+        log_reg_clf = LogisticRegression(random_state=13, solver='liblinear')
+        svm_clf_poly = SVC(kernel='poly', random_state=13, gamma='auto',
+        degree=3, coef0=1, C=5)
+        self.models = [sgd_clf, log_reg_clf, svm_clf_poly]
+        self.names = ['SGDClassifier', 'LogisticRegression', 'SVC Poly']
+        self.scoring = ['precision', 'recall', 'f1']
+        # Test cross validation with no parameters
+        self.cv_1 = cross_validate_models(self.models, self.X, self.y, self.scoring)
+        # Test cross validation with parameters
+        self.cv_2 = cross_validate_models(self.models, self.X, self.y, self.scoring,
+        cv=7, return_train_score=True)
+
     def test_cross_validate_models(self):
-        pass
+        """
+        Most of the functionality relies in calling the cross_validate function
+        so the test will focus in checking that there are results for every
+        model and every model has the required scores.
+        """
+        # Use cv_1 with no parameters
+        # Test results for the three models
+        self.assertEqual(len(self.models), len(self.cv_1))
+        for model in self.cv_1:
+            for score in self.scoring:
+                score_string = 'test_' + score
+                # Test scores are present
+                self.assertTrue(score_string in model)
+                # Test every score results for every fold (5)
+                self.assertEqual(5, len(model[score_string]))
+        # Use cv_2 with parameters
+        # Test results for the three models
+        self.assertEqual(len(self.models), len(self.cv_2))
+        for model in self.cv_2:
+            for score in self.scoring:
+                test_score_string = 'test_' + score
+                train_score_string = 'train_' + score
+                # Test scores are present (test and train)
+                self.assertTrue(test_score_string in model)
+                self.assertTrue(train_score_string in model)
+                # Test every score results for every fold (7)
+                self.assertEqual(7, len(model[test_score_string]))
 
     def test_get_cross_validate_scores(self):
-        pass
+        cv_sc = get_cross_validate_scores(self.cv_1, self.names, self.scoring)
+        # Test all models are present
+        self.assertEqual(len(self.models), len(cv_sc))
+        for model, scores in cv_sc.items():
+            self.assertTrue(model in self.names)
+            # Test all scores are present
+            self.assertEqual(len(self.scoring), len(scores))
+            for score, _ in scores.items():
+                self.assertTrue(score in self.scoring)
 
     def test_evaluate_model_with_precision_and_recall(self):
-        pass
+        # Create simple classification problem
+        y = np.concatenate((np.zeros(50), np.ones(50)))
+        X = np.c_[y,y]
+        model = self.models[0].fit(X, y)
+        # Evaluate model
+        scores = evaluate_model_with_precision_and_recall(model, X, y)
+        self.assertEqual(3, len(scores))
+        for score in scores: np.testing.assert_almost_equal(1.0, score, decimal=2)
+        # Evaluate model with inverse data so all the predictions are wrong
+        scores = evaluate_model_with_precision_and_recall(model, X, np.flip(y, 0))
+        self.assertEqual(3, len(scores))
+        for score in scores: np.testing.assert_almost_equal(0, score, decimal=2)
+        # Evaluate model with half "wrong" data
+        scores = evaluate_model_with_precision_and_recall(model, X, np.ones(100))
+        self.assertEqual(3, len(scores))
+        np.testing.assert_almost_equal(1, scores[0], decimal=2)
+        np.testing.assert_almost_equal(0.5, scores[1], decimal=2)
+        np.testing.assert_almost_equal(0.66, scores[2], decimal=2)
+
+    def test_print_scores(self):
+        # Generate a string and check that the returned string is the same
+        models_and_scores = (
+        {'model1': {'score1': 1.0, 'score2': 0.5, 'score3': 0},
+        'model2': {'score1': 0.7, 'score2': 0.3, 'score3': 0.6}})
+        scores = print_scores('my_vector', models_and_scores)
+        desired = color.BOLD + 'my_vector' + color.END + "\n"
+        desired += color.UNDERLINE + 'model1' + color.END + "\n"
+        desired += tabulate([(sc_name, sc_result)
+        for sc_name, sc_result in models_and_scores['model1'].items()], tablefmt="plain") + "\n"
+        desired += color.UNDERLINE + 'model2' + color.END + "\n"
+        desired += tabulate([(sc_name, sc_result)
+        for sc_name, sc_result in models_and_scores['model2'].items()], tablefmt="plain") + "\n"
+        self.assertEqual(desired, scores)
 
 
 if __name__ == '__main__':
