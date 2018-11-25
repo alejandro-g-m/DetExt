@@ -298,3 +298,37 @@ def create_feature_vector_from_log_file(infile, FV_function):
         df = pd.DataFrame(feature_dictionary_list).fillna(0)
 
     return df
+
+
+def create_feature_vector_from_log_file_tunnelling(infile, FV_function):
+    """
+    Open log file with DNS queries and create feature vector.
+    Treats files with tunnelling data, where the attacks are directed to
+    the domain 'test.com'.
+    infile: log file
+    FV_function: chosen function to create feature vector
+    """
+    outfile = "FV_" + infile
+
+    feature_dictionary_list = []
+
+    with open(infile) as inf, open(outfile, 'w') as outf:
+        for row in csv.reader(inf, delimiter='\t'):
+            if row and row[0][0] != '#':
+                # Parse the domain and query from file
+                try:
+                    domain = row[9].split('.')[-2] + '.' + row[9].split('.')[-1]
+                except IndexError:
+                    domain = ''
+                query = row[9].split('.')[0]
+                # Determine the attack tag and extract features for query
+                # The attacks are directed to the domain 'test.com'
+                attack = 1 if domain == 'test.com' else 0
+                features = FV_function(query, attack)
+                outf.write("%s - %s | Features: %s\n" % (query, domain, features))
+                # Append to features list
+                feature_dictionary_list.append(features)
+        # Create DataFrame from dictionary
+        df = pd.DataFrame(feature_dictionary_list).fillna(0)
+
+    return df
