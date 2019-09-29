@@ -278,7 +278,8 @@ def create_feature_vector_from_log_file(infile, FV_function):
     infile: log file
     FV_function: chosen function to create feature vector
     """
-    outfile = "FV_" + infile
+    slash_position = infile.rfind('/') # used in case the infile is a path to the file
+    outfile = infile[:slash_position + 1] + "FV_" + infile[slash_position + 1:]
 
     feature_dictionary_list = []
 

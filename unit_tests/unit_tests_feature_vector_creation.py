@@ -1,4 +1,6 @@
 import os
+import sys
+sys.path.append('..') # The code is in the parent directory
 from collections import Counter
 import unittest
 import numpy as np

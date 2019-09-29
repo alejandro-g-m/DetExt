@@ -1,4 +1,7 @@
 import unittest
+import sys
+sys.path.append('..') # The code is in the parent directory
+
 from sklearn.datasets import make_classification
 from dns_attacks_detection import *
 
