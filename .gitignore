@@ -9,4 +9,5 @@ venv*
 FV_*
 *~
 .coverage
+htmlcov
 debug*
