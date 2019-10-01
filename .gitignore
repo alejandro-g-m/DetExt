@@ -10,4 +10,5 @@ FV_*
 *~
 .coverage
 htmlcov
+coverage_report
 debug*

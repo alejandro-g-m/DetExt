@@ -38,4 +38,4 @@ else
 fi
 
 # Generate HTML report
-coverage html --title="Test coverage DetExt" --include="$report_files"
+coverage html --title="Test coverage DetExt" --include="$report_files" -d  coverage_report
