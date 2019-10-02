@@ -23,7 +23,7 @@ def initial_setup():
     FV_FUNCTION = extract_features_entropy_and_ratios
 
     AVAILABLE_MODELS = sorted(
-    [mod for mod in glob(model_directory + function_directory + '/*.pkl')])
+        [mod for mod in glob(model_directory + function_directory + '/*.pkl')])
 
 
 def query_sniff_wrapper(model):
@@ -47,8 +47,7 @@ def query_sniff_wrapper(model):
                     # Only process queries with at least 3 levels of subdomains
                     if len(query.split('.')) > 3:
                         subdomain = query.split('.')[0]
-                        features = (pd.DataFrame(FV_FUNCTION(subdomain, -1),
-                        index=[0]).fillna(0).drop('attack', 1))
+                        features = get_features_for_query(FV_FUNCTION, subdomain)
                         if model.predict(features) == 0:
                             prediction = color.GREEN + "LEGIT" + color.END
                         else:
@@ -65,8 +64,7 @@ def query_sniff_wrapper(model):
                             # data without decoding because the models are trained
                             # in this way
                             subdomain = str(query.split(b'.')[0])[2:-1]
-                            features = (pd.DataFrame(FV_FUNCTION(subdomain, -1),
-                            index=[0]).fillna(0).drop('attack', 1))
+                            features = get_features_for_query(FV_FUNCTION, subdomain)
                             if model.predict(features) == 0:
                                 prediction = color.GREEN + "LEGIT" + color.END
                             else:
@@ -83,6 +81,12 @@ def query_sniff_wrapper(model):
 
 
 def generate_menu():
+    """
+    Generates a menu for the user to interact with.
+    Returns:
+    :interface: String with the net interface to sniff.
+    :model: String with the model's name to use for classification.
+    """
     try:
         interface = input("\n[*] Enter Desired Interface "
             "(or press enter for default 'wlan0'):")
@@ -117,12 +121,20 @@ def generate_menu():
         sys.exit(0)
 
 
+def get_features_for_query(fv_function, query):
+    """
+    In order to clasify a sniffed query it needs to be transformed into a
+    feature vector.
+    """
+    return pd.DataFrame(fv_function(query, -1),index=[0]).fillna(0).drop('attack', 1)
+
+
 def get_model_name(file_string):
     """
     Returns the name of a model given the path of the file.
     """
     return file_string.split('/')[-1].split('.')[0]
-    
+
 
 def check_queries_in_models(queries):
     """
@@ -136,9 +148,9 @@ def check_queries_in_models(queries):
     loaded_models = [joblib.load(m) for m in AVAILABLE_MODELS]
     for q in queries:
         queries_in_models[q] = []
-        f = (pd.DataFrame(FV_FUNCTION(q, -1),index=[0]).fillna(0).drop('attack', 1)) # Refactor to function
+        features = get_features_for_query(FV_FUNCTION, q)
         for m, mname in zip(loaded_models, AVAILABLE_MODELS):
-            if m.predict(f) == [1]: queries_in_models[q].append(get_model_name(mname))
+            if m.predict(features) == [1]: queries_in_models[q].append(get_model_name(mname))
     return queries_in_models
 
 
@@ -155,17 +167,17 @@ def print_queries_in_models(queries_in_models):
     return print_result
 
 
-
 def main():
     initial_setup()
     interface, model = generate_menu()
     try:
         sniff(iface=interface, filter='port 53',
-            prn=query_sniff_wrapper(joblib.load(model)), store=0)
+            prn=query_sniff_wrapper(joblib.load(model)), store=False)
     except OSError:
         logger.error(f"{interface} is not a valid interface!")
 
     print("\n[*] Shutting Down...")
+
 
 
 if __name__ == '__main__':
