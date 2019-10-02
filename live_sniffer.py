@@ -122,21 +122,38 @@ def get_model_name(file_string):
     Returns the name of a model given the path of the file.
     """
     return file_string.split('/')[-1].split('.')[0]
-
+    
 
 def check_queries_in_models(queries):
     """
-    Given a list of queries, it prints the models from the available models
-    that detect those queries as attacks.
-    Used for debugging purposes.
+    Given a list of queries, it returns which models from the available models
+    detect those queries as attacks. Used only for debugging purposes.
+    The queries should be unique.
+    Returns a dictionary where the key is the query and the value
+    is a list of the models that gave a positive result.
     """
+    queries_in_models = {}
     loaded_models = [joblib.load(m) for m in AVAILABLE_MODELS]
     for q in queries:
-        print(color.BOLD, q, color.END, "\n")
-        f = (pd.DataFrame(FV_FUNCTION(q, -1),index=[0]).fillna(0).drop('attack', 1))
+        queries_in_models[q] = []
+        f = (pd.DataFrame(FV_FUNCTION(q, -1),index=[0]).fillna(0).drop('attack', 1)) # Refactor to function
         for m, mname in zip(loaded_models, AVAILABLE_MODELS):
-            if m.predict(f) == [1]: print(get_model_name(mname))
-        print("\n")
+            if m.predict(f) == [1]: queries_in_models[q].append(get_model_name(mname))
+    return queries_in_models
+
+
+def print_queries_in_models(queries_in_models):
+    """
+    Helper function to print the result of 'check_queries_in_models' in a nice format
+    """
+    print_result = ''
+    for query, models in queries_in_models.items():
+        print_result += f'{color.BOLD}{query}{color.END}\n'
+        for m in models:
+            print_result += f'{m}\n'
+        print_result += '\n'
+    return print_result
+
 
 
 def main():
