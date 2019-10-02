@@ -139,7 +139,7 @@ def check_queries_in_models(queries):
         print("\n")
 
 
-if __name__ == '__main__':
+def main():
     initial_setup()
     interface, model = generate_menu()
     try:
@@ -149,3 +149,7 @@ if __name__ == '__main__':
         logger.error(f"{interface} is not a valid interface!")
 
     print("\n[*] Shutting Down...")
+
+
+if __name__ == '__main__':
+    main()
