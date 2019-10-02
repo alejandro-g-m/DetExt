@@ -10,14 +10,20 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-# Load models using the feature vector with entropy and ratios
-directory = './models'
-function_directory = '/extract_features_entropy_and_ratios'
-default_model = directory + function_directory + '/decision_trees+knn.pkl'
-FV_function = extract_features_entropy_and_ratios
+def initial_setup():
+    # Declare global variables
+    global DEFAULT_MODEL
+    global FV_FUNCTION
+    global AVAILABLE_MODELS
+    # Load models using the feature vector with entropy and ratios
+    current_path = os.path.dirname(os.path.abspath(__file__))
+    model_directory = f'{current_path}/models'
+    function_directory = '/extract_features_entropy_and_ratios'
+    DEFAULT_MODEL = model_directory + function_directory + '/decision_trees+knn.pkl'
+    FV_FUNCTION = extract_features_entropy_and_ratios
 
-available_models = sorted(
-[mod for mod in glob(directory + function_directory + '/*.pkl')])
+    AVAILABLE_MODELS = sorted(
+    [mod for mod in glob(model_directory + function_directory + '/*.pkl')])
 
 
 def query_sniff_wrapper(model):
@@ -27,7 +33,7 @@ def query_sniff_wrapper(model):
     """
     def query_sniff(packet):
         """
-        Analayses a sniffed packet: if it has DNS information and the DNS query
+        Analyses a sniffed packet: if it has DNS information and the DNS query
         has at least 3 levels of subdomains the features for the query are
         extracted. Then, the chosen model decides if it is an attack or not.
         """
@@ -41,7 +47,7 @@ def query_sniff_wrapper(model):
                     # Only process queries with at least 3 levels of subdomains
                     if len(query.split('.')) > 3:
                         subdomain = query.split('.')[0]
-                        features = (pd.DataFrame(FV_function(subdomain, -1),
+                        features = (pd.DataFrame(FV_FUNCTION(subdomain, -1),
                         index=[0]).fillna(0).drop('attack', 1))
                         if model.predict(features) == 0:
                             prediction = color.GREEN + "LEGIT" + color.END
@@ -59,7 +65,7 @@ def query_sniff_wrapper(model):
                             # data without decoding because the models are trained
                             # in this way
                             subdomain = str(query.split(b'.')[0])[2:-1]
-                            features = (pd.DataFrame(FV_function(subdomain, -1),
+                            features = (pd.DataFrame(FV_FUNCTION(subdomain, -1),
                             index=[0]).fillna(0).drop('attack', 1))
                             if model.predict(features) == 0:
                                 prediction = color.GREEN + "LEGIT" + color.END
@@ -67,19 +73,19 @@ def query_sniff_wrapper(model):
                                 prediction = color.RED + "ATTACK" + color.END
                             print(str(ip_src) + " -> " + str(ip_dst) +
                             " : " + "(" + str(query)[2:-1] + ")" + " : " + prediction)
-                    except Exception as e:
-                        logger.error('Exception occurred: ' + str(e))
-                        logger.error(traceback.format_exc())
-                except Exception as e:
-                    logger.error('Exception occurred: ' + str(e))
-                    logger.error(traceback.format_exc())
+                    except Exception:
+                        logger.exception("Error in query_sniff when trying"
+                                            "to handle other encodings")
+                except Exception:
+                    logger.exception("Error in query_sniff when trying"
+                                        "to decode query")
     return query_sniff
 
 
 def generate_menu():
     try:
         interface = input("\n[*] Enter Desired Interface "
-        "(or press enter for default 'wlan0'):")
+            "(or press enter for default 'wlan0'):")
         if interface == '':
             interface = 'wlan0'
             print("[*] Using Default Interface: " + interface)
@@ -87,22 +93,22 @@ def generate_menu():
             print("[*] Using Selected Interface: " + interface)
 
         print("\n[*] Choose a Model:\n")
-        for i, mod in enumerate(available_models):
+        for i, mod in enumerate(AVAILABLE_MODELS):
             print("[" + str(i) + "]" + get_model_name(mod), end="")
-            if mod == default_model: print(" (default)", end="")
+            if mod == DEFAULT_MODEL: print(" (default)", end="")
             print()
 
-        chosen_model = input("\n[*] Enter Desired Model Number " +
-        "(or press enter for default '" + get_model_name(default_model) + "'):")
+        chosen_model = input("\n[*] Enter Desired Model Number (or press enter "
+            "for default '" + get_model_name(DEFAULT_MODEL) + "'):")
         if chosen_model != '':
-            if chosen_model.isdigit() and int(chosen_model) < len(available_models):
-                model = available_models[int(chosen_model)]
+            if chosen_model.isdigit() and int(chosen_model) < len(AVAILABLE_MODELS):
+                model = AVAILABLE_MODELS[int(chosen_model)]
                 print("[*] Using Selected Model: " + get_model_name(model))
                 print()
                 return interface, model
             else:
                 print("[*] Wrong Selection")
-        model = default_model
+        model = DEFAULT_MODEL
         print("[*] Using Default Model: " + get_model_name(model))
         print()
         return interface, model
@@ -124,19 +130,22 @@ def check_queries_in_models(queries):
     that detect those queries as attacks.
     Used for debugging purposes.
     """
-    loaded_models = [joblib.load(m) for m in available_models]
+    loaded_models = [joblib.load(m) for m in AVAILABLE_MODELS]
     for q in queries:
         print(color.BOLD, q, color.END, "\n")
-        f = (pd.DataFrame(FV_function(q, -1),index=[0]).fillna(0).drop('attack', 1))
-        for m, mname in zip(loaded_models, available_models):
+        f = (pd.DataFrame(FV_FUNCTION(q, -1),index=[0]).fillna(0).drop('attack', 1))
+        for m, mname in zip(loaded_models, AVAILABLE_MODELS):
             if m.predict(f) == [1]: print(get_model_name(mname))
         print("\n")
 
 
 if __name__ == '__main__':
-
+    initial_setup()
     interface, model = generate_menu()
-    sniff(iface=interface, filter='port 53',
-    prn=query_sniff_wrapper(joblib.load(model)), store=0)
+    try:
+        sniff(iface=interface, filter='port 53',
+            prn=query_sniff_wrapper(joblib.load(model)), store=0)
+    except OSError:
+        logger.error(f"{interface} is not a valid interface!")
 
     print("\n[*] Shutting Down...")
