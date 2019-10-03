@@ -111,6 +111,8 @@ def generate_menu():
                 print()
                 return interface, model
             else:
+                logger.warning("The selected model does not exist, "
+                "using default model.")
                 print("[*] Wrong Selection")
         model = DEFAULT_MODEL
         print("[*] Using Default Model: " + get_model_name(model))
@@ -173,8 +175,12 @@ def main():
     try:
         sniff(iface=interface, filter='port 53',
             prn=query_sniff_wrapper(joblib.load(model)), store=False)
+    except PermissionError:
+        logger.error("Root powers are needed!")
     except OSError:
         logger.error(f"{interface} is not a valid interface!")
+    except Exception:
+        logger.exception("Fatal error while sniffing DNS queries.")
 
     print("\n[*] Shutting Down...")
 
