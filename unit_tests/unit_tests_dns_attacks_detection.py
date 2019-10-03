@@ -144,6 +144,7 @@ class TestPlotting(unittest.TestCase):
                 self.is_point_within_polygon(X[0], X[1], vertices_x, vertices_y))
 
 
+
 class TestDataPreparation(unittest.TestCase):
 
     def setUp(self):
@@ -184,6 +185,7 @@ class TestDataPreparation(unittest.TestCase):
         len(train_set) / (len(train_set) + len(test_set)), 0.5, decimal=2)
         np.testing.assert_almost_equal(
         len(test_set) / (len(train_set) + len(test_set)), 0.5, decimal=2)
+
 
 
 class TestModelEvaluation(unittest.TestCase):
@@ -279,6 +281,7 @@ class TestModelEvaluation(unittest.TestCase):
         desired += tabulate([(sc_name, sc_result)
         for sc_name, sc_result in models_and_scores['model2'].items()], tablefmt="plain") + "\n"
         self.assertEqual(desired, scores)
+
 
 
 if __name__ == '__main__':

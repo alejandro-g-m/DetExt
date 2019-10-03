@@ -498,6 +498,8 @@ class TestFeatureVectorCreation(unittest.TestCase):
         for key, value in test.items():
             np.testing.assert_almost_equal(value, desired[key], decimal=3)
 
+
+
 class TestFeatureVectorFromLogFile(unittest.TestCase):
 
     def setUp(self):
@@ -523,6 +525,7 @@ class TestFeatureVectorFromLogFile(unittest.TestCase):
     def tearDown(self):
         os.remove(self.input_file)
         os.remove('FV_' + self.input_file)
+
 
 
 if __name__ == '__main__':
