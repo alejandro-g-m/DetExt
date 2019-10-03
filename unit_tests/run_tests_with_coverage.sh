@@ -1,3 +1,8 @@
+: '
+This file runs the unit tests as root, because it needs permissions to sniff DNS queries.
+To do that, the virtual environment path is hardcoded. If a different path is used, that should be modified.
+'
+
 branch=false
 missing=false
 all=false
@@ -18,9 +23,9 @@ done
 
 # Shows branch coverage (conditional posibilities)
 if [ "$branch" = true ] ; then
-    coverage run --include="$core_files,$test_files" --branch unit_tests.py
+    sudo ../venv/bin/python -m coverage run --include="$core_files,$test_files" --branch unit_tests.py
 else
-    coverage run --include="$core_files,$test_files" unit_tests.py
+    sudo ../venv/bin/python -m coverage run --include="$core_files,$test_files" unit_tests.py
 fi
 
 # Shows final report for all files or only the main code ones
