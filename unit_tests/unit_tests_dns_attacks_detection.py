@@ -143,6 +143,14 @@ class TestPlotting(unittest.TestCase):
                 self.assertTrue(
                 self.is_point_within_polygon(X[0], X[1], vertices_x, vertices_y))
 
+    def test_plot_predictions_for_KNN(self):
+        """
+        There does not seem to be a straight forward way to test
+        'plot_predictions_for_KNN' because this function is only plotting
+        a map of colours. Therefore, this test is skipped.
+        """
+        pass
+
 
 
 class TestDataPreparation(unittest.TestCase):
