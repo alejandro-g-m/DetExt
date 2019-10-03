@@ -67,6 +67,7 @@ class BRO_DNS_record(object):
         """
         Parses all the fields in a BRO log file
         infile: log file
+        Returns a Pandas DataFrame with the parsed file
         """
         dictionary_list = []
         with open(infile) as inf:
@@ -74,15 +75,21 @@ class BRO_DNS_record(object):
                 if row and row[0][0] != '#':
                     dic = vars(cls(row))
                     dictionary_list.append(dic)
-            # Dictionaries don't have an order, it's possible that this won't
-            # return the keys in order. A method __dict__shoud be added to
-            # the class that returns an ordered dictionary
+            # This relies on the dictionary keeping its order:
+            # https://stackoverflow.com/questions/39980323/are-dictionaries-ordered-in-python-3-6
             columns = vars(cls(row)).keys()
             df = pd.DataFrame(dictionary_list, columns=columns)
         return df
 
     @staticmethod
-    def get_not_A_records(df):
+    def get_not_A_records(df, to_file=False):
+        """
+        Returns the DNS records that are not of type A.
+        Saves the result to a file if :to_file: is True.
+        Created for debugging purposes.
+        """
         not_A = df.loc[df['query_type_name'] != 'A']
-        with open('not_A.txt', 'w') as outf:
-            outf.write(not_A.to_string())
+        if to_file:
+            with open('not_A.txt', 'w') as outf:
+                outf.write(not_A.to_string())
+        return not_A.to_string()
