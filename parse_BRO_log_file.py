@@ -73,13 +73,18 @@ class BRO_DNS_record(object):
         with open(infile) as inf:
             for row in csv.reader(inf, delimiter='\t'):
                 if row and row[0][0] != '#':
+                    # Parses the file by creating a BRO_DNS_record object
+                    # and returns a dictionary with the name of the variables
+                    # and their values
                     dic = vars(cls(row))
                     dictionary_list.append(dic)
-            # This relies on the dictionary keeping its order:
-            # https://stackoverflow.com/questions/39980323/are-dictionaries-ordered-in-python-3-6
-            columns = vars(cls(row)).keys()
-            df = pd.DataFrame(dictionary_list, columns=columns)
-        return df
+            # Check if any row was added
+            if dictionary_list:
+                # The column names to be passed to Pandas for the DataFrame creation
+                # this relies on the dictionaries returning the keys in order
+                columns = dic.keys()
+                return pd.DataFrame(dictionary_list, columns=columns)
+        return pd.DataFrame() # Return emtpy Data Frame if no info was parsed
 
     @staticmethod
     def get_not_A_records(df, to_file=False):
