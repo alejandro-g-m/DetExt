@@ -135,6 +135,35 @@ class TestBROParser(unittest.TestCase):
 
 
 
+class TestBROParserCornerCases(unittest.TestCase):
+
+    def test_parse_BRO_log_only_comments_file(self):
+        input_file = 'test_logs'
+        # Sample log file with only comment lines
+        with open(input_file, 'w') as outf:
+            outf.write("# whatever")
+            outf.write("\n# this is just a comment")
+            outf.write("\n# this is not the line you are looking for")
+        df = BRO_DNS_record.parse_BRO_log_file(input_file)
+        os.remove(input_file)
+        self.assertTrue(df.empty)
+
+    def test_parse_BRO_log_empty_file(self):
+        input_file = 'test_logs'
+        # Sample empty file
+        with open(input_file, 'w') as outf:
+            outf.write("")
+        df = BRO_DNS_record.parse_BRO_log_file(input_file)
+        os.remove(input_file)
+        self.assertTrue(df.empty)
+
+    def test_parse_BRO_log_file_wrong_file(self):
+        # File does not exist
+        self.assertRaises(FileNotFoundError,
+            BRO_DNS_record.parse_BRO_log_file, 'wrong_file')
+
+
+
 class TestBROParserUtils(unittest.TestCase):
 
     def test_fetch_field(self):
