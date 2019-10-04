@@ -504,6 +504,7 @@ class TestFeatureVectorFromLogFile(unittest.TestCase):
 
     def setUp(self):
         self.input_file = 'test_logs'
+        # Sample log file with three lines
         with open(self.input_file, 'w') as outf:
             outf.write("1530627176.803513	CAyYP92af1ISQvv9sk	192.168.0.27	"
             "40183	8.8.4.4	53	udp	30685	-	test1.edu/	1	C_INTERNET	1	A	"
@@ -520,6 +521,47 @@ class TestFeatureVectorFromLogFile(unittest.TestCase):
     def test_create_feature_vector_from_log_file(self):
         test = create_feature_vector_from_log_file(self.input_file, extract_features_reduced)
         desired = np.array([[1, 0, 0.2], [0, 0, 0], [0.666, 1, 0.333]])
+        np.testing.assert_array_almost_equal(test, desired, decimal=3)
+
+    def tearDown(self):
+        os.remove(self.input_file)
+        os.remove('FV_' + self.input_file)
+
+
+
+class TestFeatureVectorFromLogFileTunnelling(unittest.TestCase):
+
+    def setUp(self):
+        self.input_file = 'test_logs'
+        # Sample log file with three lines
+        with open(self.input_file, 'w') as outf:
+            outf.write("1542316200.014481	CakVszhj0tr0aMkDc	192.168.0.117	"
+            "40009	192.168.0.102	53	udp	3893	0.024056	"
+            "0qab682\\xca2hb\\xbe\\xeek\\xd6rd\\xc3\\xf1vb\\xde\\xdel\\xdc"
+            "\\xc6iudb\\xc2\\xe0da6\\xec\\xdfiq\\xe8\\xeb\\xddt33\\xf1n\\xeb4yth"
+            "\\xfd\\xf8voekycu\\xc1.4\\xc6\\xd1\\xd5\\xfd\\xfch\\xf4y\\xcaga"
+            "\\xbfh\\xdc\\xd2\\xc8t\\xc4\\xcf\\xdfx\\xe3\\xec\\xd0\\xf1\\xd4"
+            "\\xcb\\xc2\\xc1s\\xf1\\xdd\\xe90\\xe5\\xe5m\\xf1vmhpodv\\xcdhtpd"
+            "\\xd6c\\xcd\\xeep\\xe0.a.test.com	1	C_INTERNET	1	A	0"
+            "	NOERROR	T	F	T	F	0	i-ca.qi 0.000000	F")
+            outf.write("\n1542316200.018511	CakVszhj0tr0aMkDc	192.168.0.117	"
+            "40009	192.168.0.102	53	udp	11620	0.040031	"
+            "0ubb782\\xca2hb\\xbe\\xeek\\xd6gd\\xcb\\xf1fb\\xde\\xdel\\xdc\\xc7"
+            "\\xcaudb\\xc2\\xe0da6\\xec\\xdfiq\\xe8\\xeb\\xd8\\xebx3\\xf13\\xf7"
+            "\\xbewgn\\xfd\\xc3tiekycu\\xc1.4\\xc6\\xd9\\xd5\\xfd\\xfch\\xdcaag"
+            "\\xfc4f8.test.com	1	C_INTERNET	1	A	0	NOERROR	T	F	T	"
+            "F	0	i-ca.tp	0.000000	F")
+            outf.write("\n1542316200.058542	CakVszhj0tr0aMkDc	192.168.0.117	"
+            "40009	192.168.0.102	53	udp	19347	0.295943	paaikpri.test.com	"
+            "1	C_INTERNET	1	A	0	NOERROR	T	F	T	F	0	"
+            "i3ef31mng3gbwfwcieppsgcgbzxijfwmdixazmyhnt5lb718mtdreqq-s.dh8byoasj"
+            "bxc++7h1jiul1pkygaqwobzpggl7ffa83yletz2svymcv+gt.dkbfphu4aeiyx+64wm"
+            "a2w7ghw.ww	0.000000	F")
+
+    def test_create_feature_vector_from_log_file_tunnelling(self):
+        test = create_feature_vector_from_log_file_tunnelling(
+            self.input_file, extract_features_reduced)
+        desired = np.array([[0.8281, 1, 0.0234], [0.8175, 1, 0.0218], [1, 1, 0]])
         np.testing.assert_array_almost_equal(test, desired, decimal=3)
 
     def tearDown(self):
