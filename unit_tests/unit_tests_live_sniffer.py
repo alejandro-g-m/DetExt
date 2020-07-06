@@ -11,7 +11,11 @@ from scapy.all import *
 import live_sniffer as ls
 
 
-NET_INTERFACE = os.getenv('TEST_NET_INTERFACE', 'wlp4s0')
+"""
+# NOTE: To run this file, an environment variable called 'TEST_NET_INTERFACE'
+needs to be set to a valid network interface, otherwise it deafults to 'lo'
+"""
+NET_INTERFACE = os.getenv('TEST_NET_INTERFACE', 'lo')
 LIVE_SNIFFER_PATH = os.path.dirname(os.path.abspath(ls.__file__))
 
 
@@ -122,7 +126,7 @@ class TestLiveSnifferFunctions(unittest.TestCase):
         provided queries. They should classify properly the attack and the
         legitimate query. Otherwise, this test will fail.
         """
-        queries = ['thisisnot.an.attack', 'lwnuehe666386336373138636137.this.is']
+        queries = ['thisisnotanattack', 'lwnuehe666386336373138636137']
         queries_in_models = ls.check_queries_in_models(queries)
         # Check both queries are present
         for query in queries:
@@ -130,9 +134,9 @@ class TestLiveSnifferFunctions(unittest.TestCase):
         # Check that the models only classify as an attack the malicious query
         for model in ls.AVAILABLE_MODELS:
             mname = ls.get_model_name(model)
-            self.assertFalse(mname in queries_in_models['thisisnot.an.attack'])
+            self.assertFalse(mname in queries_in_models[queries[0]])
             self.assertTrue(mname in
-                queries_in_models['lwnuehe666386336373138636137.this.is'])
+                queries_in_models[queries[1]])
 
     def test_print_queries_in_models(self):
         """
@@ -140,7 +144,7 @@ class TestLiveSnifferFunctions(unittest.TestCase):
         a helper function. As the previous test, relies on a perfect performance
         for the given queries.
         """
-        queries = ['thisisnot.an.attack', 'lwnuehe666386336373138636137.this.is']
+        queries = ['thisisnotanattack', 'lwnuehe666386336373138636137']
         print_result = ls.print_queries_in_models(ls.check_queries_in_models(queries))
         # Count that each query appears just once in the print_result
         for query in queries:
