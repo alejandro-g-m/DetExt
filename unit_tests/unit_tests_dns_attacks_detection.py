@@ -262,18 +262,24 @@ class TestModelEvaluation(unittest.TestCase):
         model = self.models[0].fit(X, y)
         # Evaluate model
         scores = evaluate_model_with_precision_and_recall(model, X, y)
-        self.assertEqual(3, len(scores))
-        for score in scores: np.testing.assert_almost_equal(1.0, score, decimal=2)
+        self.assertEqual(4, len(scores))
+        for score in scores[:2]: np.testing.assert_almost_equal(1.0, score, decimal=2)
+        conf_matrix = np.array([[50,0], [0,50]])
+        self.assertTrue((scores[3] == conf_matrix).all())
         # Evaluate model with inverse data so all the predictions are wrong
         scores = evaluate_model_with_precision_and_recall(model, X, np.flip(y, 0))
-        self.assertEqual(3, len(scores))
-        for score in scores: np.testing.assert_almost_equal(0, score, decimal=2)
+        self.assertEqual(4, len(scores))
+        for score in scores[:2]: np.testing.assert_almost_equal(0, score, decimal=2)
+        conf_matrix = np.array([[0,50], [50,0]])
+        self.assertTrue((scores[3] == conf_matrix).all())
         # Evaluate model with half "wrong" data
         scores = evaluate_model_with_precision_and_recall(model, X, np.ones(100))
-        self.assertEqual(3, len(scores))
+        self.assertEqual(4, len(scores))
         np.testing.assert_almost_equal(1, scores[0], decimal=2)
         np.testing.assert_almost_equal(0.5, scores[1], decimal=2)
         np.testing.assert_almost_equal(0.66, scores[2], decimal=2)
+        conf_matrix = np.array([[0,0], [50,50]])
+        self.assertTrue((scores[3] == conf_matrix).all())
 
     def test_print_scores(self):
         # Generate a string and check that the returned string is the same

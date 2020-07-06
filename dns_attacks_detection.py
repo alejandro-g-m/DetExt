@@ -179,12 +179,14 @@ def evaluate_model_with_precision_and_recall(model, X_test, y_test):
     Evaluates the predictions of a "model" for the data "X_test".
     Returns the precision, recall and F1 scores after comparing the predictions
     to the real values contained in "y_test".
+    Also the confusion matrix is returned.
     """
     final_predictions = model.predict(X_test)
     final_precision = precision_score(y_test, final_predictions)
     final_recall = recall_score(y_test, final_predictions)
     final_f1 = f1_score(y_test, final_predictions)
-    return final_precision, final_recall, final_f1
+    final_confusion_matrix = confusion_matrix(y_test, final_predictions)
+    return final_precision, final_recall, final_f1, final_confusion_matrix
 
 
 def print_scores(vector_name, scores):
